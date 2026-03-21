@@ -1,0 +1,835 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+<title>Wagner Valêncio | Simulador e Agendamento</title>
+
+<!-- Leaflet CSS/JS -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  margin: 0;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: white;
+  background: url('https://images.unsplash.com/photo-1493238792000-8113da705763') no-repeat center fixed;
+  background-size: cover;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.78);
+  top: 0;
+  left: 0;
+  z-index: -1;
+}
+
+/* ===== PERFIL ===== */
+.perfil {
+  text-align: center;
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.foto-perfil {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  border: 2px solid #ff6a00;
+  box-shadow: 0 0 15px #ff6a00;
+  object-fit: cover;
+}
+
+.logo-nome {
+  width: 280px;
+  max-width: 85%;
+  display: block;
+  margin-top: -10px;
+  margin-bottom: -5px;
+}
+
+.stars-perfil {
+  color: #ffc107;
+  font-size: 22px;
+  letter-spacing: 2px;
+}
+
+.bio {
+  font-size: 13px;
+  color: #ccc;
+  margin-top: 4px;
+}
+
+/* ===== CARDS ===== */
+.container {
+  padding: 20px;
+  max-width: 650px;
+  margin: 0 auto;
+}
+
+.card {
+  background: rgba(20,20,20,0.55);
+  backdrop-filter: blur(10px);
+  padding: 20px;
+  border-radius: 20px;
+  margin-bottom: 20px;
+  border: 1px solid rgba(255,106,0,0.3);
+  transition: 0.2s;
+}
+
+.banner {
+  width: 100%;
+  border-radius: 16px;
+  margin-bottom: 10px;
+  border: 2px solid #ff6a00;
+  box-shadow: 0 0 12px #ff6a00;
+}
+
+/* Info boxes originais */
+.info-box {
+  background: rgba(255,255,255,0.05);
+  border-left: 3px solid #ff6a00;
+  padding: 10px;
+  border-radius: 10px;
+  margin-bottom: 10px;
+  font-size: 13px;
+}
+
+/* Formas de pagamento */
+.payment-title {
+  text-align: center;
+  font-weight: bold;
+  margin-top: 10px;
+  margin-bottom: 10px;
+}
+.payment {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
+}
+.payment span {
+  background: rgba(255,255,255,0.08);
+  padding: 6px 10px;
+  border-radius: 8px;
+}
+.price {
+  text-align: center;
+  font-size: 16px;
+  margin: 10px 0;
+  color: #4caf50;
+  box-shadow: 0 0 15px #4caf50;
+  padding: 8px;
+  border-radius: 12px;
+}
+
+/* Painel informativo */
+.info-painel {
+  background: rgba(0,0,0,0.15);
+  border-left: 4px solid #ff6a00;
+  padding: 16px;
+  border-radius: 14px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.2;
+  color: #f0f0f0;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 0 15px #ff5a00;
+}
+
+.info-painel strong {
+  display: block;
+  text-align: center;
+  font-size: 1.4em;
+  margin-bottom: 6px;
+  color: #ff5a00;
+}
+
+.destaque {
+  color: #ffaa44;
+}
+
+/* Simulador */
+.simulador-titulo {
+  font-size: 20px;
+  font-weight: bold;
+  margin-bottom: 12px;
+  text-align: center;
+  color: #ffaa44;
+}
+.msg-mapa {
+  text-align: center;
+  font-size: 13px;
+  color: #ccc;
+  margin: 8px 0;
+  background: rgba(0,0,0,0.4);
+  padding: 6px;
+  border-radius: 30px;
+}
+#mapa {
+  height: 32vh;
+  border-radius: 20px;
+  margin: 12px 0;
+  border: 1px solid #ff6a00;
+  box-shadow: 0 0 8px rgba(255,106,0,0.4);
+}
+.input-box {
+  background: rgba(0,0,0,0.5);
+  padding: 12px 15px;
+  border-radius: 40px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid rgba(255,106,0,0.5);
+}
+.input-box input {
+  background: none;
+  border: none;
+  color: white;
+  width: 100%;
+  font-size: 15px;
+  outline: none;
+}
+.input-box button {
+  background: #ff6a00;
+  border: none;
+  border-radius: 40px;
+  padding: 6px 12px;
+  font-size: 18px;
+  cursor: pointer;
+  color: white;
+}
+.sugestoes {
+  background: #1e1e2f;
+  border-radius: 16px;
+  margin-bottom: 12px;
+  max-height: 150px;
+  overflow-y: auto;
+  backdrop-filter: blur(4px);
+}
+.sugestao {
+  padding: 10px 15px;
+  border-bottom: 1px solid #334155;
+  cursor: pointer;
+  font-size: 14px;
+}
+.sugestao:hover {
+  background: #ff6a00;
+  color: black;
+}
+.quick {
+  display: flex;
+  gap: 12px;
+  margin: 15px 0;
+}
+.quick button {
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 40px;
+  background: #2a2a3a;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.quick button:hover {
+  background: #ff6a00;
+}
+.resultado {
+  background: rgba(0,0,0,0.6);
+  padding: 16px;
+  border-radius: 24px;
+  margin-top: 20px;
+  text-align: center;
+  display: none;
+}
+.preco {
+  font-size: 28px;
+  font-weight: bold;
+  color: #4caf50;
+  text-shadow: 0 0 5px #4caf50;
+}
+.nota-preco {
+  font-size: 12px;
+  color: #aaa;
+  margin-top: 5px;
+}
+
+/* Formulário de agendamento separado */
+.form-agendamento {
+  margin-top: 5px;
+}
+.form-group {
+  margin-bottom: 15px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  margin-bottom: 5px;
+  color: #ddd;
+}
+.desc {
+  font-size: 11px;
+  color: #888;
+  margin-bottom: 5px;
+}
+.form-group input, .form-group textarea {
+  width: 100%;
+  padding: 12px;
+  border-radius: 30px;
+  border: 1px solid rgba(255,106,0,0.5);
+  background: rgba(0,0,0,0.5);
+  color: white;
+  font-size: 14px;
+  outline: none;
+}
+.form-group input:focus, .form-group textarea:focus {
+  border-color: #ff6a00;
+}
+.btn-agendar {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: 50px;
+  background: linear-gradient(95deg, #ff6a00, #ff8c2e);
+  font-size: 18px;
+  font-weight: bold;
+  color: white;
+  margin-top: 10px;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+/* carrossel e avaliações */
+.carousel {
+  display: flex;
+  overflow-x: auto;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 8px 0;
+}
+.carousel img {
+  width: 120px;
+  border-radius: 16px;
+  cursor: pointer;
+  transition: 0.2s;
+  border: 1px solid #ff6a00;
+}
+.carousel img:hover {
+  transform: scale(1.03);
+}
+.review {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 12px;
+  background: rgba(0,0,0,0.3);
+  padding: 8px;
+  border-radius: 20px;
+}
+.review img {
+  width: 44px;
+  border-radius: 50%;
+}
+.name { font-weight: bold; }
+.stars { color: #ffc107; font-size: 13px; }
+
+.float-btn {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background: #ff6a00;
+  padding: 14px 18px;
+  border-radius: 50px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px black;
+  z-index: 1000;
+}
+#contador-online {
+  position: fixed;
+  bottom: 90px;
+  right: 20px;
+  background: #ff6a00;
+  padding: 6px 14px;
+  border-radius: 30px;
+  font-size: 13px;
+  font-weight: bold;
+  z-index: 1000;
+}
+.modal {
+  display: none;
+  position: fixed;
+  z-index: 2000;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+}
+.modal-content {
+  max-width: 90%;
+  max-height: 90%;
+  border-radius: 20px;
+  border: 3px solid #ff6a00;
+}
+.close {
+  position: absolute;
+  top: 20px;
+  right: 35px;
+  color: white;
+  font-size: 40px;
+  cursor: pointer;
+}
+</style>
+
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#ff6a00">
+</head>
+<body>
+
+<div class="perfil">
+  <img src="img/wvperfil.png" class="foto-perfil" alt="Wagner">
+  <img src="img/logonome.png" class="logo-nome" alt="Logo">
+  <div class="stars-perfil">★★★★★</div>
+  <p>+7 anos • +30.000 viagens</p>
+  <div class="bio">🚘 Atendimento confortável, seguro e pontual.</div>
+</div>
+
+<div class="container">
+
+  <!-- CARD DO BANNER + INFORMAÇÕES ORIGINAIS -->
+  <div class="card">
+    <img class="banner" src="img/fotobannerwvuber.png" alt="Wagner Valêncio">
+
+    <div class="info-box">
+      ⚡ Respondo em até 5 minutos • Atendimento direto
+    </div>
+    <div class="info-box">
+      📅 Agende sua corrida com antecedência e evite atrasos
+    </div>
+
+    <div class="payment-title">Formas de pagamento aceitas</div>
+    <div class="payment">
+      <span>💳 Cartão</span>
+      <span>💸 Dinheiro</span>
+      <span>⚡ Pix</span>
+    </div>
+
+    <div class="price">
+      💰 Corridas a partir de <strong>R$12</strong>
+      <div style="font-size:12px;color:#ccc;">
+        Valor confirmado no WhatsApp
+      </div>
+    </div>
+  </div>
+
+  <!-- PAINEL INFORMATIVO DESCRITO PELO CLIENTE -->
+  <div class="card">
+    <div class="info-painel">
+      <strong>✨ Diferencial exclusivo ✨</strong><br>
+      Aqui no meu sistema você tem um <span class="destaque">simulador interativo</span> onde pode simular a corrida e conferir o valor antes mesmo de solicitar ou agendar.<br>
+      📅 Você tem um painel para agendar sua corrida ou solicitar de acordo com minha disponibilidade.<br>
+      📸 Existe também uma área com <span class="destaque">fotos e avaliações de clientes</span> mais abaixo.<br>
+      🗺️ Abaixo você poderá selecionar as localizações no mapa e ver o valor aproximado.<br>
+      ✍️ Caso queira solicitar, preencha o formulário de agendamento com os endereços e clique em <span class="destaque">Agendar corrida</span>.
+    </div>
+  </div>
+
+  <!-- SIMULADOR (mapa e seleção de pontos) -->
+  <div class="card">
+    <div class="simulador-titulo">📍 SIMULADOR DE CORRIDA (aproxime os pontos no mapa)</div>
+    <div id="msgMapa" class="msg-mapa">📍 Toque no mapa para escolher origem e destino</div>
+    <div id="mapa"></div>
+
+    <div class="input-box">
+      <input type="text" id="origemSim" placeholder=" 📍 Origem (digite ou toque no mapa)" autocomplete="off">
+      <button onclick="pegarLocalSim()">📍</button>
+    </div>
+    <div id="origemSug" class="sugestoes"></div>
+
+    <div class="input-box">
+      <input type="text" id="destinoSim" placeholder="🏁 Destino (digite ou toque no mapa)" autocomplete="off">
+    </div>
+    <div id="destinoSug" class="sugestoes"></div>
+
+    <div class="quick">
+      <button onclick="usarEnderecoSalvo('casa')">🏠 Casa</button>
+      <button onclick="usarEnderecoSalvo('trabalho')">💼 Trabalho</button>
+    </div>
+
+    <div class="resultado" id="resultadoSim">
+      <div id="infoRotaSim"></div>
+      <div class="preco" id="precoSim">R$ 0,00</div>
+      <div class="nota-preco">* Valor aproximado, sujeito à confirmação com o motorista.</div>
+    </div>
+  </div>
+
+  <!-- FORMULÁRIO DE AGENDAMENTO SEPARADO -->
+  <div class="card">
+    <h3 style="text-align:center; margin-bottom: 10px;">📝 AGENDAR CORRIDA</h3>
+    <div class="form-agendamento">
+      <div class="form-group">
+        <label>📍 Local de saída</label>
+        <div class="desc">Ex: Barraque do Nego, Av. Principal, 123</div>
+        <input type="text" id="agendaOrigem" placeholder="Digite o endereço completo">
+      </div>
+      <div class="form-group">
+        <label>🏁 Destino</label>
+        <div class="desc">Ex: Aeroporto, Praia do Centro, etc.</div>
+        <input type="text" id="agendaDestino" placeholder="Digite o destino">
+      </div>
+      <div class="form-group">
+        <label>📅 Data</label>
+        <div class="desc">Para agendamento</div>
+        <input type="date" id="agendaData">
+      </div>
+      <div class="form-group">
+        <label>⏰ Horário</label>
+        <div class="desc">Escolha o melhor horário</div>
+        <input type="time" id="agendaHora">
+      </div>
+      <button class="btn-agendar" onclick="enviarAgendamentoWhats()">🚗 Enviar solicitaão 🚀</button>
+    </div>
+  </div>
+
+  <!-- DESTAQUES E AVALIAÇÕES (mantido do original) -->
+  <div class="card">
+    <h3 style="text-align:center;">📸 DESTAQUES</h3>
+    <div class="carousel">
+      <img src="img/Foto1.png" alt="Carro 1" onclick="abrirModal(this)">
+      <img src="img/foto2.png" alt="Carro 2" onclick="abrirModal(this)">
+      <img src="img/foto3.png" alt="Carro 3" onclick="abrirModal(this)">
+      <img src="img/foto4.png" alt="Carro 4" onclick="abrirModal(this)">
+      <img src="img/foto5.png" alt="Carro 5" onclick="abrirModal(this)">
+      <img src="img/foto6.png" alt="Carro 6" onclick="abrirModal(this)">
+    </div>
+
+    <h3 style="color:#ff6a00; text-align:center;">⭐ AVALIAÇÕES</h3>
+    <div class="review"><img src="https://randomuser.me/api/portraits/women/44.jpg"><div><div class="name">Carla Souza</div><div class="stars">★★★★★</div>Atendimento impecável!</div></div>
+    <div class="review"><img src="https://randomuser.me/api/portraits/men/32.jpg"><div><div class="name">João Lima</div><div class="stars">★★★★★</div>Muito rápido e confiável</div></div>
+    <div class="review"><img src="https://randomuser.me/api/portraits/women/65.jpg"><div><div class="name">Fernanda Alves</div><div class="stars">★★★★★</div>Super pontual</div></div>
+    <div class="review"><img src="https://randomuser.me/api/portraits/men/41.jpg"><div><div class="name">Ricardo Mendes</div><div class="stars">★★★★★</div>Carro confortável</div></div>
+    <div class="review"><img src="https://randomuser.me/api/portraits/women/12.jpg"><div><div class="name">Juliana Rocha</div><div class="stars">★★★★★</div>Recomendo demais!</div></div>
+    <div class="review"><img src="https://randomuser.me/api/portraits/men/55.jpg"><div><div class="name">Carlos Eduardo</div><div class="stars">★★★★★</div>Atendimento top</div></div>
+  </div>
+
+</div>
+
+<div class="float-btn" onclick="abrirWhatsApp()">💬</div>
+<div id="contador-online">0 pessoas online</div>
+
+<!-- MODAL IMAGEM -->
+<div id="modal" class="modal" onclick="fecharModal()">
+  <span class="close">&times;</span>
+  <img class="modal-content" id="modal-img">
+</div>
+
+<script>
+// ---------- CONFIGURAÇÕES GLOBAIS ----------
+const NUMERO_WA = "47988062094";
+const API_KEY_ORS = "eyJvcmciOiI1YjNjZTM1OTc4NTExMTAwMDFjZjYyNDgiLCJpZCI6ImZkYzM1ZTdmNzU4ZDQ0NzRiNjZjNTI3YzZkNGY4MDdjIiwiaCI6Im11cm11cjY0In0=";
+
+let dadosCorrida = {};      // guarda dados da última simulação
+let mapa, marcadorOrigem, marcadorDestino, linhaRota;
+let timeoutSugestao;
+
+// ---------- INICIALIZA MAPA ----------
+function initMapa() {
+  mapa = L.map('mapa').setView([-27.1004, -48.6172], 13);
+  L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap',
+    maxZoom: 19,
+  }).addTo(mapa);
+
+  mapa.on('click', async function(e) {
+    const { lat, lng } = e.latlng;
+
+    if (!marcadorOrigem) {
+      // definir origem
+      if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
+      marcadorOrigem = L.marker([lat, lng]).addTo(mapa);
+      const endereco = await reverseGeocode(lat, lng);
+      document.getElementById('origemSim').value = endereco;
+      document.getElementById('origemSim').dataset.coord = `${lat},${lng}`;
+      atualizarMsgMapa();
+    }
+    else if (!marcadorDestino) {
+      // definir destino
+      if (marcadorDestino) mapa.removeLayer(marcadorDestino);
+      marcadorDestino = L.marker([lat, lng]).addTo(mapa);
+      const endereco = await reverseGeocode(lat, lng);
+      document.getElementById('destinoSim').value = endereco;
+      document.getElementById('destinoSim').dataset.coord = `${lat},${lng}`;
+      atualizarMsgMapa();
+      calcularRota();
+    }
+    else {
+      // reset total
+      if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
+      if (marcadorDestino) mapa.removeLayer(marcadorDestino);
+      if (linhaRota) mapa.removeLayer(linhaRota);
+      marcadorOrigem = null;
+      marcadorDestino = null;
+      linhaRota = null;
+      document.getElementById('origemSim').value = '';
+      document.getElementById('destinoSim').value = '';
+      delete document.getElementById('origemSim').dataset.coord;
+      delete document.getElementById('destinoSim').dataset.coord;
+      document.getElementById('resultadoSim').style.display = 'none';
+
+      // agora marca nova origem
+      marcadorOrigem = L.marker([lat, lng]).addTo(mapa);
+      const endereco = await reverseGeocode(lat, lng);
+      document.getElementById('origemSim').value = endereco;
+      document.getElementById('origemSim').dataset.coord = `${lat},${lng}`;
+      atualizarMsgMapa();
+    }
+  });
+}
+
+function atualizarMsgMapa() {
+  let msg = "📍 Toque no mapa para definir origem";
+  if (marcadorOrigem && !marcadorDestino) msg = "📍 Agora toque para definir o destino";
+  if (marcadorOrigem && marcadorDestino) msg = "✅ Rota definida. Valor aproximado calculado abaixo!";
+  document.getElementById('msgMapa').innerHTML = msg;
+}
+
+// reverse geocoding (Nominatim)
+async function reverseGeocode(lat, lng) {
+  try {
+    const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}&zoom=18&addressdetails=1`);
+    const data = await res.json();
+    return data.display_name || `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  } catch {
+    return `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
+  }
+}
+
+// Autocomplete com Photon
+async function buscarSugestao(texto, boxId) {
+  clearTimeout(timeoutSugestao);
+  timeoutSugestao = setTimeout(async () => {
+    if (texto.length < 3) {
+      document.getElementById(boxId).innerHTML = "";
+      return;
+    }
+    try {
+      const url = `https://photon.komoot.io/api/?q=${encodeURIComponent(texto)}&limit=5`;
+      const res = await fetch(url);
+      const data = await res.json();
+      if (!data.features) return;
+      let html = "";
+      data.features.forEach(lugar => {
+        let nome = (lugar.properties.name || '') + (lugar.properties.city ? ', ' + lugar.properties.city : '');
+        if (!nome.trim()) nome = lugar.properties.street || "Local";
+        const lat = lugar.geometry.coordinates[1];
+        const lon = lugar.geometry.coordinates[0];
+        html += `<div class="sugestao" onclick="selecionarEndereco('${nome.replace(/'/g, "\\'")}', ${lat}, ${lon}, '${boxId}')">${nome}</div>`;
+      });
+      document.getElementById(boxId).innerHTML = html;
+    } catch(e) {}
+  }, 500);
+}
+
+function selecionarEndereco(nome, lat, lon, boxId) {
+  if (boxId === "origemSug") {
+    document.getElementById('origemSim').value = nome;
+    document.getElementById('origemSim').dataset.coord = `${lat},${lon}`;
+    if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
+    marcadorOrigem = L.marker([lat, lon]).addTo(mapa);
+    mapa.setView([lat, lon], 14);
+  } else {
+    document.getElementById('destinoSim').value = nome;
+    document.getElementById('destinoSim').dataset.coord = `${lat},${lon}`;
+    if (marcadorDestino) mapa.removeLayer(marcadorDestino);
+    marcadorDestino = L.marker([lat, lon]).addTo(mapa);
+    mapa.setView([lat, lon], 14);
+  }
+  document.getElementById(boxId).innerHTML = "";
+  if (marcadorOrigem && marcadorDestino) calcularRota();
+  atualizarMsgMapa();
+}
+
+function pegarLocalSim() {
+  if (!navigator.geolocation) return alert("Geolocalização não suportada");
+  navigator.geolocation.getCurrentPosition(async (pos) => {
+    const lat = pos.coords.latitude;
+    const lon = pos.coords.longitude;
+    const end = await reverseGeocode(lat, lon);
+    document.getElementById('origemSim').value = end;
+    document.getElementById('origemSim').dataset.coord = `${lat},${lon}`;
+    if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
+    marcadorOrigem = L.marker([lat, lon]).addTo(mapa);
+    mapa.setView([lat, lon], 14);
+    atualizarMsgMapa();
+  }, () => alert("Permita acesso à localização"));
+}
+
+// Calcular rota e preço
+async function calcularRota() {
+  const coordOrigem = document.getElementById('origemSim').dataset.coord;
+  const coordDestino = document.getElementById('destinoSim').dataset.coord;
+  if (!coordOrigem || !coordDestino) return;
+
+  const [latO, lonO] = coordOrigem.split(',').map(Number);
+  const [latD, lonD] = coordDestino.split(',').map(Number);
+
+  try {
+    const response = await fetch("https://api.openrouteservice.org/v2/directions/driving-car/geojson", {
+      method: "POST",
+      headers: {
+        "Authorization": API_KEY_ORS,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        coordinates: [[lonO, latO], [lonD, latD]]
+      })
+    });
+    const data = await response.json();
+    if (!data.features) throw new Error("Erro rota");
+
+    if (linhaRota) mapa.removeLayer(linhaRota);
+    linhaRota = L.geoJSON(data).addTo(mapa);
+    mapa.fitBounds(linhaRota.getBounds());
+
+    const summary = data.features[0].properties.summary;
+    const km = summary.distance / 1000;
+    const minutos = summary.duration / 60;
+
+    // Cálculo do preço (igual ao simulador original)
+    const horaAtual = new Date().getHours();
+    const tarifa = (horaAtual >= 22 || horaAtual < 6) ?
+      { bandeirada: 5, km: 3.0, minuto: 0.75 } :
+      { bandeirada: 5, km: 2.0, minuto: 0.20 };
+
+    let preco = tarifa.bandeirada + (km * tarifa.km) + (minutos * tarifa.minuto);
+    if (preco < 12) preco = 12;
+
+    dadosCorrida = {
+      origem: document.getElementById('origemSim').value,
+      destino: document.getElementById('destinoSim').value,
+      km: km.toFixed(1),
+      tempo: Math.round(minutos),
+      preco: preco.toFixed(2),
+      coordOrigem: coordOrigem,
+      coordDestino: coordDestino
+    };
+
+    document.getElementById('infoRotaSim').innerHTML = `📏 ${dadosCorrida.km} km • ⏱️ ${dadosCorrida.tempo} min`;
+    document.getElementById('precoSim').innerHTML = `R$ ${dadosCorrida.preco}`;
+    document.getElementById('resultadoSim').style.display = "block";
+  } catch (err) {
+    console.error(err);
+    alert("Erro ao calcular rota. Tente novamente.");
+  }
+}
+
+// Salvar / usar endereços rápidos
+function usarEnderecoSalvo(tipo) {
+  let salvo = localStorage.getItem(tipo);
+  if (!salvo) {
+    let origemInput = document.getElementById("origemSim");
+    if (!origemInput.value || !origemInput.dataset.coord) {
+      alert("Selecione um local primeiro (digite ou toque no mapa) para salvar como " + tipo);
+      return;
+    }
+    let dados = { nome: origemInput.value, coord: origemInput.dataset.coord };
+    localStorage.setItem(tipo, JSON.stringify(dados));
+    alert(`✅ ${tipo} salvo com sucesso!`);
+    return;
+  }
+  let dados = JSON.parse(salvo);
+  document.getElementById("origemSim").value = dados.nome;
+  document.getElementById("origemSim").dataset.coord = dados.coord;
+  let [lat, lon] = dados.coord.split(",").map(Number);
+  if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
+  marcadorOrigem = L.marker([lat, lon]).addTo(mapa);
+  mapa.setView([lat, lon], 14);
+  if (marcadorOrigem && marcadorDestino) calcularRota();
+  atualizarMsgMapa();
+}
+
+// Envio do formulário de agendamento (separado) - CORRIGIDO
+function enviarAgendamentoWhats() {
+  const origem = document.getElementById('agendaOrigem').value.trim();
+  const destino = document.getElementById('agendaDestino').value.trim();
+  const data = document.getElementById('agendaData').value;
+  const hora = document.getElementById('agendaHora').value;
+
+  if (!origem || !destino) {
+    alert("Por favor, preencha os campos de local de saída e destino.");
+    return;
+  }
+  if (!data || !hora) {
+    alert("Por favor, informe a data e horário para agendamento.");
+    return;
+  }
+
+  let mensagem = `🚘 *AGENDAMENTO DE CORRIDA* 🚘\n\nOlá, Wagner! Gostaria de solicitar uma corrida 📲\n\n\n📍 *Saída:* ${origem}\n🏁 *Destino:* ${destino}\n📅 *Data:* ${data}\n⏰ *Horário:* ${hora}\n\n✅ Por favor, confirme o valor e a disponibilidade. Obrigado!`;
+
+  window.open(`https://wa.me/${NUMERO_WA}?text=${encodeURIComponent(mensagem)}`, '_blank');
+}
+
+function abrirWhatsApp() {
+  window.open(`https://wa.me/${NUMERO_WA}`, '_blank');
+}
+
+// ---------- MODAL DAS FOTOS ----------
+function abrirModal(img) {
+  const modal = document.getElementById('modal');
+  const modalImg = document.getElementById('modal-img');
+  modal.style.display = "flex";
+  modalImg.src = img.src;
+}
+function fecharModal() {
+  document.getElementById('modal').style.display = "none";
+}
+document.querySelector('.close')?.addEventListener('click', fecharModal);
+
+// ---------- CONTADOR ONLINE ----------
+let pessoasOnline = Math.floor(Math.random() * 5) + 2;
+const contadorElem = document.getElementById('contador-online');
+function atualizarContador() {
+  let delta = Math.random() < 0.5 ? 1 : -1;
+  pessoasOnline = Math.max(1, pessoasOnline + delta);
+  contadorElem.textContent = pessoasOnline + " pessoas online";
+}
+setInterval(atualizarContador, 4000);
+atualizarContador();
+
+// Inicializar mapa e eventos de autocomplete
+document.addEventListener('DOMContentLoaded', () => {
+  initMapa();
+
+  const origemInput = document.getElementById('origemSim');
+  const destinoInput = document.getElementById('destinoSim');
+  origemInput.addEventListener('input', (e) => buscarSugestao(e.target.value, 'origemSug'));
+  destinoInput.addEventListener('input', (e) => buscarSugestao(e.target.value, 'destinoSug'));
+
+  // Se houver ambos os campos preenchidos via autocomplete, calcular rota
+  origemInput.addEventListener('change', () => { if (marcadorOrigem && marcadorDestino) calcularRota(); });
+  destinoInput.addEventListener('change', () => { if (marcadorOrigem && marcadorDestino) calcularRota(); });
+});
+
+// Registrar Service Worker PWA
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').then(() => console.log('SW registrado')).catch(e => console.warn(e));
+}
+</script>
+</body>
+</html>
