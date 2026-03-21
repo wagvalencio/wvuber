@@ -210,6 +210,19 @@ body::before {
   cursor: pointer;
   color: white;
 }
+#btn-local {
+  background: #000000;   /* ou a cor que preferir */
+  color: white;
+  border-radius: 50%;      /* torna redondo */
+  width: 30px;             /* define largura */
+  height: 30px;            /* igual à largura */
+  padding: 0;              /* remove o padding padrão */
+  display: inline-flex;    /* centraliza o ícone */
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #ffffff; /* cor da borda */
+  box-shadow: 0 0 3px #ffffff; /* opcional: um leve brilho */
+}
 .sugestoes {
   background: #1e1e2f;
   border-radius: 16px;
@@ -228,25 +241,7 @@ body::before {
   background: #ff6a00;
   color: black;
 }
-.quick {
-  display: flex;
-  gap: 12px;
-  margin: 15px 0;
-}
-.quick button {
-  flex: 1;
-  padding: 10px;
-  border: none;
-  border-radius: 40px;
-  background: #2a2a3a;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  transition: 0.2s;
-}
-.quick button:hover {
-  background: #ff6a00;
-}
+/* Botões rápidos removidos */
 .resultado {
   background: rgba(0,0,0,0.6);
   padding: 16px;
@@ -457,8 +452,8 @@ body::before {
     <div id="mapa"></div>
 
     <div class="input-box">
-      <input type="text" id="origemSim" placeholder=" 📍 Origem (digite ou toque no mapa)" autocomplete="off">
-      <button onclick="pegarLocalSim()">📍</button>
+      <input type="text" id="origemSim" placeholder=" 📍 Origem (digite ou toque aqui 👉 👉)" autocomplete="off">
+      <button id="btn-local" onclick="pegarLocalSim()">📍</button>
     </div>
     <div id="origemSug" class="sugestoes"></div>
 
@@ -467,11 +462,7 @@ body::before {
     </div>
     <div id="destinoSug" class="sugestoes"></div>
 
-    <div class="quick">
-      <button onclick="usarEnderecoSalvo('casa')">🏠 Casa</button>
-      <button onclick="usarEnderecoSalvo('trabalho')">💼 Trabalho</button>
-    </div>
-
+    <!-- Botões Casa/Trabalho removidos -->
     <div class="resultado" id="resultadoSim">
       <div id="infoRotaSim"></div>
       <div class="preco" id="precoSim">R$ 0,00</div>
@@ -503,7 +494,7 @@ body::before {
         <div class="desc">Escolha o melhor horário</div>
         <input type="time" id="agendaHora">
       </div>
-      <button class="btn-agendar" onclick="enviarAgendamentoWhats()">🚗 Enviar solicitaão 🚀</button>
+      <button class="btn-agendar" onclick="enviarAgendamentoWhats()">🚘 Enviar Solicitação 📲</button>
     </div>
   </div>
 
@@ -739,32 +730,9 @@ async function calcularRota() {
   }
 }
 
-// Salvar / usar endereços rápidos
-function usarEnderecoSalvo(tipo) {
-  let salvo = localStorage.getItem(tipo);
-  if (!salvo) {
-    let origemInput = document.getElementById("origemSim");
-    if (!origemInput.value || !origemInput.dataset.coord) {
-      alert("Selecione um local primeiro (digite ou toque no mapa) para salvar como " + tipo);
-      return;
-    }
-    let dados = { nome: origemInput.value, coord: origemInput.dataset.coord };
-    localStorage.setItem(tipo, JSON.stringify(dados));
-    alert(`✅ ${tipo} salvo com sucesso!`);
-    return;
-  }
-  let dados = JSON.parse(salvo);
-  document.getElementById("origemSim").value = dados.nome;
-  document.getElementById("origemSim").dataset.coord = dados.coord;
-  let [lat, lon] = dados.coord.split(",").map(Number);
-  if (marcadorOrigem) mapa.removeLayer(marcadorOrigem);
-  marcadorOrigem = L.marker([lat, lon]).addTo(mapa);
-  mapa.setView([lat, lon], 14);
-  if (marcadorOrigem && marcadorDestino) calcularRota();
-  atualizarMsgMapa();
-}
+// Função usarEnderecoSalvo removida
 
-// Envio do formulário de agendamento (separado) - CORRIGIDO
+// Envio do formulário de agendamento
 function enviarAgendamentoWhats() {
   const origem = document.getElementById('agendaOrigem').value.trim();
   const destino = document.getElementById('agendaDestino').value.trim();
@@ -780,7 +748,7 @@ function enviarAgendamentoWhats() {
     return;
   }
 
-  let mensagem = `🚘 *AGENDAMENTO DE CORRIDA* 🚘\n\nOlá, Wagner! Gostaria de solicitar uma corrida 📲\n\n\n📍 *Saída:* ${origem}\n🏁 *Destino:* ${destino}\n📅 *Data:* ${data}\n⏰ *Horário:* ${hora}\n\n✅ Por favor, confirme o valor e a disponibilidade. Obrigado!`;
+  let mensagem = `🚘 *AGENDAMENTO DE CORRIDA* 🚘\n\nOlá, Wagner! Gostaria de solicitar uma corrida 📲\n\n\n 📍 *Saída:* ${origem}\n🏁 *Destino:* ${destino}\n📅 *Data:* ${data}\n⏰ *Horário:* ${hora}\n\n✅ Por favor, confirme o valor e a disponibilidade. Obrigado!`;
 
   window.open(`https://wa.me/${NUMERO_WA}?text=${encodeURIComponent(mensagem)}`, '_blank');
 }
